@@ -5,6 +5,7 @@
 #include <Encoder.h>
 #include <avr/pgmspace.h>
 #include <math.h>
+#include <Servo.h>
 
 // Firmware version
 const char* VERSION = "0.0.1";
@@ -16,6 +17,10 @@ const char* VERSION = "0.0.1";
 const int STEP_PINS[] = {0, 2, 4, 6, 8, 10};
 const int DIR_PINS[] = {1, 3, 5, 7, 9, 11};
 const int LIMIT_PINS[] = {26, 27, 28, 29, 30, 31};
+
+const int GRIPPER_PIN = 35;
+Servo gripper;
+int gripper_val = 90;
 
 const float MOTOR_STEPS_PER_DEG[] = {44.44444444, 55.55555556, 55.55555556,
                                      49.77777777, 21.86024888, 22.22222222};
@@ -66,6 +71,8 @@ int ENC_RANGE_STEPS[NUM_JOINTS];
 
 void setup() {
   Serial.begin(9600);
+
+  gripper.attach(GRIPPER_PIN);
 
   for (int i = 0; i < NUM_JOINTS; ++i) {
     pinMode(STEP_PINS[i], OUTPUT);
@@ -366,6 +373,11 @@ void stateTRAJ() {
           STATE = STATE_ERR;
           return;
         }
+      } else if (function == "MG") {
+        gripper_val = inData.substring(2, 5).toInt();
+      }
+      else if (function == "GP") {
+        Serial.println("GP" + String(gripper_val));
       }
       // clear message
       inData = "";
@@ -373,6 +385,8 @@ void stateTRAJ() {
     for (int i = 0; i < NUM_JOINTS; ++i) {
       stepperJoints[i].run();
     }
+
+    gripper.write(gripper_val);
   }
 }
 
